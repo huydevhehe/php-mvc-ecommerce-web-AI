@@ -1,0 +1,4 @@
+chạy xampp cho file đồ án này vào htdocs của xampp copy code vào php admin trong http://localhost:8080/phpmyadmin/ dán vào chạy data ra xong truy cập http://localhost:8080/webbanhang/product là dô web nha 
+chức năng trong tk admin ( huydzhehe ) tk mk chung tạo mk 2fa của gmail xong dô code thay mk là được chức năng auto gửi mail có đánh giá sản phẩm sau khi đã mua admin xác nhận giao hàng thành công AI gợi ý Sản phẩm mua kèm chat bot AI quản lý sản phẩm danh mục thêm mã giảm giá quản lý đơn hàng giỏ hàng quản lý giỏ hàng của tôi 
+chúc may mắn 
+mật khẩu mail 2fa trong productcontroller.php thay tk mk luon nha

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quản lý sản phẩm</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body class="bg-light">
+  <div class="container py-5">
+    <h1 class="mb-4 text-primary">🛒 Quản lý sản phẩm</h1>
+
+    <div id="product-list" class="row row-cols-1 row-cols-md-2 g-3 mb-5"></div>
+
+    <!-- Form thêm -->
+    <div class="card card-body shadow-sm mb-4">
+      <h3 class="mb-3"><i class="fas fa-plus"></i> Thêm sản phẩm mới</h3>
+      <form id="add-form">
+        <input name="name" placeholder="Tên sản phẩm" class="form-control mb-2" required />
+        <textarea name="description" placeholder="Mô tả" class="form-control mb-2" required></textarea>
+        <input name="price" placeholder="Giá" class="form-control mb-2" type="number" step="0.01" required />
+        <input name="category_id" placeholder="ID danh mục" class="form-control mb-3" type="number" required />
+        <button type="submit" class="btn btn-success"><i class="fas fa-plus-circle"></i> Thêm</button>
+      </form>
+    </div>
+
+    <!-- Form sửa -->
+    <div id="edit-container" class="card card-body shadow-sm bg-warning-subtle" style="display:none;">
+      <h3 class="mb-3"><i class="fas fa-pen"></i> Sửa sản phẩm</h3>
+      <form id="edit-form">
+        <input type="hidden" name="id" />
+        <input name="name" placeholder="Tên sản phẩm" class="form-control mb-2" required />
+        <textarea name="description" placeholder="Mô tả" class="form-control mb-2" required></textarea>
+        <input name="price" placeholder="Giá" class="form-control mb-2" type="number" step="0.01" required />
+        <input name="category_id" placeholder="ID danh mục" class="form-control mb-3" type="number" required />
+        <button type="submit" class="btn btn-primary me-2"><i class="fas fa-save"></i> Cập nhật</button>
+        <button type="button" onclick="cancelEdit()" class="btn btn-secondary">Hủy</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function loadProducts() {
+      $.get("/webbanhang/api/product", function(data) {
+        const container = $('#product-list');
+        container.empty();
+        data.forEach(p => {
+          container.append(`
+            <div class="col">
+              <div class="card shadow-sm">
+                <div class="card-body">
+                  <h5 class="card-title">${p.name}</h5>
+                  <p class="card-text">${p.description}</p>
+                  <p><strong>${p.price} VND</strong> | Danh mục: ${p.category_name || '---'}</p>
+                  <button onclick="startEdit(${p.id}, \`${p.name}\`, \`${p.description}\`, '${p.price}', ${p.category_id})" class="btn btn-warning btn-sm me-2">
+                    <i class="fas fa-pen"></i> Sửa
+                  </button>
+                  <button onclick="deleteProduct(${p.id})" class="btn btn-danger btn-sm">
+                    <i class="fas fa-trash"></i> Xóa
+                  </button>
+                </div>
+              </div>
+            </div>
+          `);
+        });
+      });
+    }
+
+    function startEdit(id, name, description, price, category_id) {
+      $('#edit-form [name="id"]').val(id);
+      $('#edit-form [name="name"]').val(name);
+      $('#edit-form [name="description"]').val(description);
+      $('#edit-form [name="price"]').val(price);
+      $('#edit-form [name="category_id"]').val(category_id);
+      $('#edit-container').slideDown();
+    }
+
+    function cancelEdit() {
+      $('#edit-form')[0].reset();
+      $('#edit-container').slideUp();
+    }
+
+    function deleteProduct(id) {
+      Swal.fire({
+        title: 'Bạn chắc chắn?',
+        text: 'Sản phẩm sẽ bị xóa!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Xóa',
+        cancelButtonText: 'Hủy'
+      }).then(result => {
+        if (result.isConfirmed) {
+          $.ajax({
+            url: `/webbanhang/api/product/${id}`,
+            method: 'DELETE',
+            success: () => {
+              Swal.fire('Đã xóa!', '', 'success');
+              loadProducts();
+            }
+          });
+        }
+      });
+    }
+
+    $('#add-form').submit(function(e) {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(this).entries());
+      $.ajax({
+        url: "/webbanhang/api/product",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(data),
+        success: () => {
+          Swal.fire('Thêm thành công!', '', 'success');
+          this.reset();
+          loadProducts();
+        }
+      });
+    });
+
+    $('#edit-form').submit(function(e) {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(this).entries());
+      const id = data.id;
+      delete data.id;
+      $.ajax({
+        url: `/webbanhang/api/product/${id}`,
+        method: "PUT",
+        contentType: "application/json",
+        data: JSON.stringify(data),
+        success: () => {
+          Swal.fire('Đã cập nhật sản phẩm!', '', 'success');
+          cancelEdit();
+          loadProducts();
+        }
+      });
+    });
+
+    $(document).ready(loadProducts);
+  </script>
+</body>
+</html>
